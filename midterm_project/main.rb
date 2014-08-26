@@ -6,6 +6,9 @@ require 'pp'
 require 'rest-client'
 require 'json'
 
+# Global Variables
+address_book = {}
+
 def create_user
 	print "What is your name? "
 	name = gets.strip
@@ -26,8 +29,6 @@ def add_location
 
 	Location.new(address, city, state, name)
 end
-
-#add a method to format gsub?
 
 def query_google_maps(location)
 	address = location.address.gsub(" ", "+")
@@ -61,25 +62,60 @@ def query_yelp(coordinates)
 	return data	
 end
 
+def store_locations(address_book, location, restaurants)
+	address_book.store(location.name, restaurants)
+	return address_book
+end
+
+def add_more_locations(address_book, location, restaurants)
+	location = add_location
+	puts "Location added successfully: \n Name: #{location.name} \n Address: \n #{location.address} \n #{location.city}, #{location.state}"
+
+	restaurants = query_yelp(query_google_maps(location))
+	view_restaurants(restaurants, location)
+
+	locations = store_locations(address_book, location, restaurants)
+
+	puts "Would you like to add another location search? (y/n)"
+	get_user_input(address_book, location, restaurants)
+end
+
+def view_restaurants(restaurants, location)
+	restaurants.each do |restaurant|
+		puts "#{restaurant[:name]} is #{restaurant[:distance].round(2)} meters away from #{location.name} at #{restaurant[:display_address].join(', ')}."
+	end
+end
+
+def view_locations(address_book)
+	address_book.each do |key, array|
+  		puts "Location: #{key}"
+  		array.each do |restaurant|
+  			puts "\tRestaurant: #{restaurant[:name]}\n\t\tCategories: #{restaurant[:categories].join(', ')}\n\t\tAddress: #{restaurant[:display_address].join(', ')}"
+		end
+	end	
+end
+
+def get_user_input(address_book, location, restaurants)
+	user_input = gets.chomp
+		if user_input == "y"
+			add_more_locations(address_book, location, restaurants)
+		end
+end
+
 puts "Welcome to the neighborhood restaurant search, created by Josie Keller."
 
 user = create_user
-location = add_location
 
+location = add_location
 puts "Location added successfully: \n Name: #{location.name} \n Address: \n #{location.address} \n #{location.city}, #{location.state}"
 
 restaurants = query_yelp(query_google_maps(location))
+view_restaurants(restaurants, location)
 
-#add a method to view_restaurants
-#add a method to convert meters to miles
+locations = store_locations(address_book, location, restaurants)
+puts "Would you like to add another location search? (y/n)"
+get_user_input(address_book, location, restaurants)
 
-	restaurants.each do |restaurant|
-		puts "#{restaurant[:name]} is #{restaurant[:distance]} meters away from #{location.name} at #{restaurant[:display_address]}."
-	end
+view_locations(locations)
 
-###### Iterate over Yelp responses to store restaurant data in a hash of arrays #############
-
-# restaurants = {}
-# restaurants[:location.name] << [yelp_response[restaurant].name, yelp_response[restaurant].distance, yelp_response[restaurant].display_address]
- 	
 
