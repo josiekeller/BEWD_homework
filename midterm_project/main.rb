@@ -1,6 +1,5 @@
 require_relative 'lib/location'
 require_relative 'lib/person'
-require_relative 'lib/restaurant'
 require_relative 'lib/yelp'
 require 'pp'
 require 'rest-client'
@@ -67,7 +66,7 @@ def store_locations(address_book, location, restaurants)
 	return address_book
 end
 
-def add_more_locations(address_book, location, restaurants)
+def add_more_locations(address_book)
 	location = add_location
 	puts "Location added successfully: \n Name: #{location.name} \n Address: \n #{location.address} \n #{location.city}, #{location.state}"
 
@@ -77,7 +76,7 @@ def add_more_locations(address_book, location, restaurants)
 	locations = store_locations(address_book, location, restaurants)
 
 	puts "Would you like to add another location search? (y/n)"
-	get_user_input(address_book, location, restaurants)
+	get_user_input(address_book)
 end
 
 def view_restaurants(restaurants, location)
@@ -95,27 +94,18 @@ def view_locations(address_book)
 	end	
 end
 
-def get_user_input(address_book, location, restaurants)
+def get_user_input(address_book)
 	user_input = gets.chomp
 		if user_input == "y"
-			add_more_locations(address_book, location, restaurants)
+			add_more_locations(address_book)
 		end
 end
 
 puts "Welcome to the neighborhood restaurant search, created by Josie Keller."
 
 user = create_user
+add_more_locations(address_book)
 
-location = add_location
-puts "Location added successfully: \n Name: #{location.name} \n Address: \n #{location.address} \n #{location.city}, #{location.state}"
-
-restaurants = query_yelp(query_google_maps(location))
-view_restaurants(restaurants, location)
-
-locations = store_locations(address_book, location, restaurants)
-puts "Would you like to add another location search? (y/n)"
-get_user_input(address_book, location, restaurants)
-
-view_locations(locations)
+view_locations(address_book)
 
 
