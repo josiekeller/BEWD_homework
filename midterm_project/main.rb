@@ -1,7 +1,8 @@
 require_relative 'lib/location'
 require_relative 'lib/person'
 require_relative 'lib/restaurant'
-
+require_relative 'lib/yelp'
+require 'pp'
 require 'rest-client'
 require 'json'
 
@@ -26,6 +27,7 @@ def add_location
 	Location.new(address, city, state, name)
 end
 
+#add a method to format gsub?
 
 def query_google_maps(location)
 	address = location.address.gsub(" ", "+")
@@ -33,21 +35,25 @@ def query_google_maps(location)
 	state = location.state.gsub(" ", "+")
 	url = "https://maps.googleapis.com/maps/api/geocode/json?address=#{address},+#{city},+#{state}&key=AIzaSyA1X5PWoG9AvilyNaJkv0annjzl7Ql7dWU"
 
-	puts "url: #{url}"
-
 	gRes = JSON.load(RestClient.get url)
 
-	puts "gRes: #{gRes}"
-
-	puts "Latitude = #{gRes["results"][0]["geometry"]["location"]["lat"]}"
-	puts "Longitude = #{gRes["results"][0]["geometry"]["location"]["lng"]}"
+	return { latitude: gRes["results"][0]["geometry"]["location"]["lat"], longitude: gRes["results"][0]["geometry"]["location"]["lng"] }
 end
 
-# def query_yelp
-# end
+def query_yelp(coordinates)
 
-# def view_restaurants
-# end
+	params = { term: 'restaurants',
+           limit: 5,
+         }
+
+	yelp_response = Client.instance.search_by_coordinates(coordinates, params)
+	yelp_response.businesses
+	# puts yelp_response.businesses[0].name
+	# puts yelp_response.businesses[0].rating
+end
+
+#def view_restaurants
+#end
 
 puts "Welcome to the neighborhood restaurant search, created by Josie Keller."
 
@@ -56,7 +62,15 @@ location = add_location
 
 puts "Location added successfully: \n Name: #{location.name} \n Address: \n #{location.address} \n #{location.city}, #{location.state}"
 
-query_google_maps(location)
+yelp_response = query_yelp(query_google_maps(location))
 
-#puts "The latitude of that location is #{location.lat} and the longitude is #{location.lng}"
+yelp_response.each do |restaurant|
+	restaurants = {}
+	restaurants[:location.name] << [yelp_response[restaurant].name, yelp_response[restaurant].distance, yelp_response[restaurant].display_address]
+end
+
+puts restaurants
+# puts "The latitude of that location is #{location.lat} and the longitude is #{location.lng}"
+
+
 
