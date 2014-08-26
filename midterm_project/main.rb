@@ -42,18 +42,24 @@ end
 
 def query_yelp(coordinates)
 
-	params = { term: 'restaurants',
-           limit: 5,
-         }
-
+	params = { term: 'restaurants', limit: 5 }
 	yelp_response = Client.instance.search_by_coordinates(coordinates, params)
-	yelp_response.businesses
-	# puts yelp_response.businesses[0].name
-	# puts yelp_response.businesses[0].rating
-end
+	
+	data = yelp_response.businesses.map do |entry|
+		# Each entry is of type BurstStruct which has a built in to_json method.
+		# This to_json method extracts the neccessary info into an array
+		# of hashes that we can later iterate over
+		e = JSON.parse(entry.to_json) 
+		{
+			name: e["name"],
+			distance: e["distance"],
+			categories: e["categories"],
+			display_address: e["location"]["display_address"]
+		}
+	end
 
-#def view_restaurants
-#end
+	return data	
+end
 
 puts "Welcome to the neighborhood restaurant search, created by Josie Keller."
 
@@ -62,15 +68,18 @@ location = add_location
 
 puts "Location added successfully: \n Name: #{location.name} \n Address: \n #{location.address} \n #{location.city}, #{location.state}"
 
-yelp_response = query_yelp(query_google_maps(location))
+restaurants = query_yelp(query_google_maps(location))
 
-yelp_response.each do |restaurant|
-	restaurants = {}
-	restaurants[:location.name] << [yelp_response[restaurant].name, yelp_response[restaurant].distance, yelp_response[restaurant].display_address]
-end
+#add a method to view_restaurants
+#add a method to convert meters to miles
 
-puts restaurants
-# puts "The latitude of that location is #{location.lat} and the longitude is #{location.lng}"
+	restaurants.each do |restaurant|
+		puts "#{restaurant[:name]} is #{restaurant[:distance]} meters away from #{location.name} at #{restaurant[:display_address]}."
+	end
 
+###### Iterate over Yelp responses to store restaurant data in a hash of arrays #############
 
+# restaurants = {}
+# restaurants[:location.name] << [yelp_response[restaurant].name, yelp_response[restaurant].distance, yelp_response[restaurant].display_address]
+ 	
 
